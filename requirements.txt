@@ -1,0 +1,2 @@
+termtosvg
+pexpect
