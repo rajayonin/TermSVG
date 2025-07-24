@@ -1,3 +1,10 @@
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#     "pexpect>=4.9.0",
+#     "termtosvg>=1.1.0",
+# ]
+# ///
 from pathlib import Path
 from string import Template
 import subprocess

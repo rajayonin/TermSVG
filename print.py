@@ -1,3 +1,9 @@
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#     "pexpect>=4.9.0",
+# ]
+# ///
 import pexpect
 import subprocess
 from typing import cast

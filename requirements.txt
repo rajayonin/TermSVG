@@ -1,2 +1,2 @@
-termtosvg
-pexpect
+pexpect>=4.9.0
+termtosvg>=1.1.0
