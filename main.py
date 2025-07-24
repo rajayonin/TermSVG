@@ -4,6 +4,10 @@ import subprocess
 import tempfile
 import sys
 import re
+import shlex
+
+from termtosvg.main import record_render_subcommand, DEFAULT_LOOP_DELAY
+from termtosvg.config import validate_geometry
 
 # Config
 
@@ -71,7 +75,7 @@ template = template.substitute(
 
 # Command to get the output from. We run a second script to adjust the
 # formatting of the output
-_CMD = f"python3 {Path(__file__).parent}/print.py '{COMMAND}'"
+_CMD = f"{sys.executable} {Path(__file__).parent / 'print.py'} '{COMMAND}'"
 
 
 def replacer(match: re.Match[str]) -> str:
@@ -92,30 +96,30 @@ if __name__ == "__main__":
         lines = res.splitlines()
         y = max(len(lines), 2)
         x = max(len(line) for line in lines)
-        GEOMETRY = f"{x}x{y}"
-        print(f"Detected geometry: {GEOMETRY}")
+        geometry = (x, y)
+        print(f"Detected geometry: {x}x{y}")
+
+    else:
+        geometry = validate_geometry(GEOMETRY)
 
     # Termtosvg generates frames of a video, so we need to create a temp
     # directory to store them and then get the last one
     with tempfile.TemporaryDirectory(prefix="termsvg_out") as dir:
-        with tempfile.NamedTemporaryFile("w", prefix="termsvg_template") as f:
-            f.write(template)
-            f.flush()
-            subprocess.run(
-                [
-                    "termtosvg",
-                    "--still-frames",
-                    "--command",
-                    _CMD,
-                    "-t",
-                    f.name,
-                    "-g",
-                    GEOMETRY,
-                    dir,
-                ],
-                check=True,
-            )
-        print("\033[?25h") # Show the cursor again
+        record_render_subcommand(
+            process_args=shlex.split(_CMD),
+            still=True,
+            template=template.encode(),
+            geometry=geometry,
+            output_path=dir,
+            # defaults
+            input_fileno=sys.stdin.fileno(),
+            output_fileno=sys.stdout.fileno(),
+            min_frame_duration=1,
+            max_frame_duration=None,
+            loop_delay=DEFAULT_LOOP_DELAY,
+        )
+
+        print("\033[?25h")  # Show the cursor again
         # Read the last frame
         results = list(Path(dir).iterdir())
         results.sort(key=lambda path: path.name)
